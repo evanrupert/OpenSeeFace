@@ -289,6 +289,7 @@ try:
                 packet.extend(bytearray(struct.pack("f", f.euler[0])))
                 packet.extend(bytearray(struct.pack("f", f.euler[1])))
                 packet.extend(bytearray(struct.pack("f", f.euler[2])))
+
                 packet.extend(bytearray(struct.pack("f", f.translation[0])))
                 packet.extend(bytearray(struct.pack("f", f.translation[1])))
                 packet.extend(bytearray(struct.pack("f", f.translation[2])))
@@ -302,6 +303,9 @@ try:
                 data.extend(frame_count.to_bytes(4, byteorder='big'))
                 data.extend(right_eye_open.to_bytes(1, byteorder='big'))
                 data.extend(left_eye_open.to_bytes(1, byteorder='big'))
+                data.extend(bytearray(struct.pack(">f", f.translation[0])))
+                data.extend(bytearray(struct.pack(">f", f.translation[1])))
+                data.extend(bytearray(struct.pack(">f", f.translation[2])))
 
                 # print(frame_count)
                 # print(f'Right Eye: {right_eye_open}')
@@ -378,7 +382,6 @@ try:
                         log.write(f",{f.current_features[feature]}")
                 
                 data.extend(bytearray(struct.pack(">f", f.current_features['mouth_open'])))
-                data.extend(bytearray(struct.pack(">f", f.current_features['mouth_wide'])))
 
                 if not log is None:
                     log.write("\r\n")
