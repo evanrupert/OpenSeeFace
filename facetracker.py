@@ -260,6 +260,7 @@ try:
                 tracking_time += inference_time / len(faces)
                 tracking_frames += 1
             packet = bytearray()
+            data = bytearray()
             detected = False
             for face_num, f in enumerate(faces):
                 f = copy.copy(f)
@@ -291,6 +292,21 @@ try:
                 packet.extend(bytearray(struct.pack("f", f.translation[0])))
                 packet.extend(bytearray(struct.pack("f", f.translation[1])))
                 packet.extend(bytearray(struct.pack("f", f.translation[2])))
+
+                # data.extend(bytearray(struct.pack("i", frame_count)))
+                # data.extend(bytearray(struct.pack("B", 1 if f.eye_blink[0] > 0.30 else 0)))
+                # data.extend(bytearray(struct.pack("B", 1 if f.eye_blink[1] > 0.30 else 0)))
+
+                right_eye_open = 1 if f.eye_blink[0] > 0.30 else 0
+                left_eye_open = 1 if f.eye_blink[1] > 0.30 else 0
+                data.extend(frame_count.to_bytes(4, byteorder='big'))
+                data.extend(right_eye_open.to_bytes(1, byteorder='big'))
+                data.extend(left_eye_open.to_bytes(1, byteorder='big'))
+
+                # print(frame_count)
+                # print(f'Right Eye: {right_eye_open}')
+                # print(f'Left Eye: {left_eye_open}')
+
                 if not log is None:
                     log.write(f"{frame_count},{now},{width},{height},{fps},{face_num},{f.id},{f.eye_blink[0]},{f.eye_blink[1]},{f.conf},{f.success},{f.pnp_error},{f.quaternion[0]},{f.quaternion[1]},{f.quaternion[2]},{f.quaternion[3]},{f.euler[0]},{f.euler[1]},{f.euler[2]},{f.rotation[0]},{f.rotation[1]},{f.rotation[2]},{f.translation[0]},{f.translation[1]},{f.translation[2]}")
                 for (x,y,c) in f.lms:
@@ -360,12 +376,18 @@ try:
                     packet.extend(bytearray(struct.pack("f", f.current_features[feature])))
                     if not log is None:
                         log.write(f",{f.current_features[feature]}")
+                
+                data.extend(bytearray(struct.pack(">f", f.current_features['mouth_open'])))
+                data.extend(bytearray(struct.pack(">f", f.current_features['mouth_wide'])))
+
                 if not log is None:
                     log.write("\r\n")
                     log.flush()
 
             if detected and len(faces) < 40:
-                sock.sendto(packet, (target_ip, target_port))
+                sock.sendto(data, (target_ip, target_port))
+                # sock.sendto(packet, (target_ip, target_port))
+
 
             if not out is None:
                 video_frame = frame
